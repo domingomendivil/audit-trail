@@ -2,6 +2,8 @@ module mingo/audit
 
 go 1.18
 
+// +heroku goVersion 1.17 
+
 require github.com/gorilla/mux v1.8.0
 
 require (
