@@ -38,6 +38,9 @@ func main() {
 	log.Printf("Server started")
 
 	router := sw.NewRouter()
-
-	log.Fatal(http.ListenAndServe(":8099", router))
+	port, err := os.Getenv("PORT")
+	if err != nil {
+		port = "8099"
+	}
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
