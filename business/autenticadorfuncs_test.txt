@@ -1,0 +1,202 @@
+package autenticadorfuncs
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+type DataMock struct {
+	mock.Mock
+}
+
+type LdapMock struct {
+	mock.Mock
+}
+
+type SessionMock struct {
+	mock.Mock
+}
+
+func (s *SessionMock) GetSession(token string) interface{} {
+	args := s.Called(token)
+	return args.Get(0)
+}
+
+func (s *SessionMock) DeleteSession(token string) bool {
+	args := s.Called(token)
+	return args.Bool(0)
+}
+
+func (s *SessionMock) AddSession(u interface{}) string {
+	args := s.Called(u)
+	return args.String(0)
+}
+
+func (m *DataMock) GetUsuarioById(id string) *UsuarioBean {
+	args := m.Called(id)
+	if args.Get(0) != nil {
+		usr := args.Get(0).(*UsuarioBean)
+		return usr
+	} else {
+		return nil
+	}
+}
+
+func (m *DataMock) GetAccionesUsuario(id string) []string {
+	args := m.Called(id)
+	return args.Get(0).([]string)
+}
+
+func (l *LdapMock) Connect(usuario, password string) bool {
+	args := l.Called(usuario, password)
+	return args.Bool(0)
+}
+
+var ldapMock *LdapMock
+
+var dataMock *DataMock
+
+var sessionMock *SessionMock
+
+func dadoPasswordIncorrecto(id, password string) {
+	ldapMock = new(LdapMock)
+	ldapMock.On("Connect", id, password).Return(false)
+}
+
+func dadoPasswordCorrecto(id, password string) {
+	ldapMock = new(LdapMock)
+	ldapMock.On("Connect", id, password).Return(true)
+}
+
+func dadoUsuarioenBD(id string, habilitado bool, ips ...string) {
+	var usuario UsuarioBean
+	usuario.id = id
+	usuario.ips = ips
+	usuario.habilitado = habilitado
+	dataMock = new(DataMock)
+	dataMock.On("GetUsuarioById", id).Return(&usuario)
+}
+
+func dadoUsuarioNoExisteenBD(id string) {
+	dataMock = new(DataMock)
+	dataMock.On("GetUsuarioById", id).Return(nil)
+}
+
+func cuandoAutenticoDa(t *testing.T, id, password, ip string, devuelve bool) {
+	a := Aut{dataMock, ldapMock, sessionMock}
+	res, err := a.Autenticar(id, password, ip)
+	assert.Equal(t, devuelve, res)
+	assert.Nil(t, err)
+}
+
+func cuandoEstaAutenticadoRetornaFalse(t *testing.T, id, token string) {
+	a := Aut{dataMock, ldapMock, sessionMock}
+	res := a.EstaAutenticado(id, token)
+	assert.Equal(t, res, false)
+}
+
+func cuandoEstaAutenticadoRetornaTrue(t *testing.T, id, token string) {
+	a := Aut{dataMock, ldapMock, sessionMock}
+	res := a.EstaAutenticado(id, token)
+	assert.Equal(t, res, true)
+}
+
+func cuandoCierroSesionRetornaTrue(t *testing.T, id, token, ip string) {
+	a := Aut{dataMock, ldapMock, sessionMock}
+	res := a.CerrarSesion(id, token, ip)
+	assert.Equal(t, res, true)
+}
+
+func cuandoCierroSesionRetornaFalse(t *testing.T, id, token, ip string) {
+	a := Aut{dataMock, ldapMock, sessionMock}
+	res := a.CerrarSesion(id, token, ip)
+	assert.Equal(t, res, false)
+}
+
+func dadoSesionNoExiste(token string) {
+	sessionMock = new(SessionMock)
+	sessionMock.On("GetSession", token).Return(nil)
+}
+
+func dadoSesionSeAgrega(token string) {
+	sessionMock = new(SessionMock)
+	sessionMock.On("AddSession", mock.Anything).Return(token)
+}
+
+func dadoSesionExiste(id, token string) {
+	var usuario UsuarioBean
+	usuario.id = id
+	sessionMock = new(SessionMock)
+	sessionMock.On("GetSession", token).Return(usuario)
+}
+
+func TestAutenticar1(t *testing.T) {
+	dadoPasswordIncorrecto("d0178", "ps")
+	cuandoAutenticoDa(t, "d0178", "ps", "127.0.0.1", false)
+}
+
+func TestAutenticar2(t *testing.T) {
+	dadoPasswordCorrecto("d0178", "ps")
+	dadoUsuarioenBD("d0178", true, "192.168.1.1")
+	cuandoAutenticoDa(t, "d0178", "ps", "127.0.0.1", false)
+}
+
+func TestAutenticar3(t *testing.T) {
+	dadoPasswordCorrecto("d0178", "ps")
+	dadoUsuarioNoExisteenBD("d0178")
+	cuandoAutenticoDa(t, "d0178", "ps", "127.0.0.1", false)
+}
+
+func TestAutenticar4(t *testing.T) {
+	dadoPasswordCorrecto("d0178", "ps")
+	dadoUsuarioenBD("d0178", false, "127.0.0.1")
+	cuandoAutenticoDa(t, "d0178", "ps", "127.0.0.1", false)
+}
+
+func TestAutenticar5(t *testing.T) {
+	dadoPasswordCorrecto("d0178", "ps")
+	dadoUsuarioenBD("d0178", true, "127.0.0.1")
+	dadoSesionSeAgrega("token")
+	cuandoAutenticoDa(t, "d0178", "ps", "127.0.0.1", true)
+	ldapMock.AssertExpectations(t)
+}
+
+func TestAutenticar6(t *testing.T) {
+	dadoPasswordCorrecto("d0178", "ps")
+	dadoUsuarioenBD("d0178", true, "127.0.0.1", "192.168.1.1")
+	cuandoAutenticoDa(t, "d0178", "ps", "127.0.0.1", true)
+}
+
+func TestAutenticar7(t *testing.T) {
+	dadoPasswordCorrecto("d0178", "ps")
+	dadoUsuarioenBD("d0178", true)
+	cuandoAutenticoDa(t, "d0178", "ps", "127.0.0.1", false)
+}
+
+func TestEstaAutenticado1(t *testing.T) {
+	dadoSesionNoExiste("token")
+	cuandoEstaAutenticadoRetornaFalse(t, "d0178", "token")
+}
+
+func TestEstaAutenticado2(t *testing.T) {
+	dadoSesionExiste("d0178", "token")
+	cuandoEstaAutenticadoRetornaTrue(t, "d0178", "token")
+}
+
+/**func TestCerrarSesion1(t *testing.T) {
+	dadoSesionExiste("d0178", "token")
+	cuandoCierroSesionRetornaTrue(t, "d0178", "token", "127.0.0.1")
+}
+
+func TestCerrarSesion2(t *testing.T) {
+	dadoSesionExiste("d0175", "token")
+	cuandoCierroSesionRetornaFalse(t, "d0178", "token", "127.0.0.1")
+}
+
+func TestCerrarSesion3(t *testing.T) {
+	dadoSesionNoExiste("token")
+	cuandoCierroSesionRetornaFalse(t, "d0178", "token", "127.0.0.1")
+}
+**/

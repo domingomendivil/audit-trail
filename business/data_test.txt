@@ -1,0 +1,50 @@
+package autenticadorfuncs
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+type UsuarioDAOMock struct {
+	mock.Mock
+}
+
+var daoMock *UsuarioDAOMock
+
+func (m *UsuarioDAOMock) getById(id string) UsuarioBean {
+	args := m.Called(id)
+	p := (args.Get(0)).(*UsuarioBean)
+	return *p
+}
+
+/**func (m *UsuarioDAOMock) GetById(i interface{}, t reflect.Type) interface{} {
+	fmt.Print("valor ")
+	fmt.Println(i)
+	fmt.Print("typeOf ")
+	fmt.Println(t)
+	args := m.Called(i, t)
+	return args.Get(0)
+}**/
+
+func TestGetUserById1(t *testing.T) {
+	dadoUsuarioExiste("d0178")
+	cuandoGetUserByIdDaNoNulo(t, "d0178")
+}
+
+func TestGetAccionesUsuario1(t *testing.T) {
+
+}
+
+func dadoUsuarioExiste(id string) {
+	daoMock := new(UsuarioDAOMock)
+	var unUsuario UsuarioBean
+	daoMock.On("getById", id).Return(&unUsuario)
+}
+
+func cuandoGetUserByIdDaNoNulo(t *testing.T, id string) {
+	data := DataImpl{daoMock}
+	usuario := data.GetUsuarioById("d0178")
+	assert.NotNil(t, usuario)
+}

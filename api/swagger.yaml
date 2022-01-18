@@ -1,0 +1,126 @@
+openapi: 3.0.1
+info:
+  title: AUdit Trail
+  description: "This is a sample server Petstore server.  You can find out more about\
+    \     Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net,\
+    \ #swagger](http://swagger.io/irc/).      For this sample, you can use the api\
+    \ key `special-key` to test the authorization     filters."
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+- url: https://desabe.dgi.gub.uy:1080/DGILocationsRest/v2
+tags:
+- name: entrada
+  description: Everything about your Entradas
+  externalDocs:
+    description: Find out more
+    url: http://swagger.io
+paths:
+  /event:
+    post:
+      tags:
+      - entrada
+      summary: Adds a new event to the Audit Trail
+      operationId: addEvent
+      requestBody:
+        description: Adds a new event
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      responses:
+        "202":
+          description: Event created
+        "405":
+          description: Invalid input
+          content: {}
+      security:
+      - petstore_auth:
+        - write:pets
+        - read:pets
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    Event:
+      required:
+      - added-time
+      - affected-resource
+      - created-time
+      - event-type
+      - origin-IP
+      - origin-system
+      - success
+      - system-event
+      type: object
+      properties:
+        event-type:
+          type: string
+          description: Name of the Event Type
+          example: CUSTOMER-CREATED
+        system-event:
+          type: boolean
+          description: "Indicates whether the Event was generated automatically by\
+            \ the system, or it was caused by a user action"
+        origin-system:
+          type: string
+          description: "Indicates the System where the Event was originated from.\
+            \ It could also be an Id of the system from which the event originated\
+            \ from. If it was generated from a sensor, this field can be the sensor\
+            \ ID. e.g. C232E-1235-EF231-EF3247"
+          example: Account-System
+        created-time:
+          type: string
+          description: Indicates the time at which the Event was created
+          example: 2020-06-11T13:55:24Z
+        added-time:
+          type: string
+          description: Indicates the time at which the Event was added to the Audit
+            Trail
+          example: 2020-06-11T13:55:24Z
+        success:
+          type: boolean
+          description: Indicates whether the Event was a success or a failure
+        affected-resource:
+          type: string
+          description: "Indicates the resource or component to which the event is\
+            \ associated. For example, when a user with Id 9098 is created. The affected-resource\
+            \ could be 9098. If it's a general event, for example a System Failure,\
+            \ it could indicate the id of the System, e.g. the CRM."
+          example: "9098"
+        origin-IP:
+          type: string
+          description: Indicates the IP of the system from where the event was originated
+      xml:
+        name: Pet
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+  securitySchemes:
+    petstore_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: http://petstore.swagger.io/oauth/dialog
+          scopes:
+            write:pets: modifica entradas
+            read:pets: lee entradas
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
