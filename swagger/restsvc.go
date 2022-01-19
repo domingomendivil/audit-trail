@@ -58,10 +58,16 @@ func (restSvc *RestSvcImpl) FindByType(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(len(events))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		if events != nil {
+			json.NewEncoder(w).Encode(events)
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		} else {
+			http.Error(w, "No events were found", http.StatusNotFound)
+			return
+		}
 	}
 
-	json.NewEncoder(w).Encode(events)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 }
 
 func AddEvent(w http.ResponseWriter, r *http.Request) {
