@@ -1,10 +1,11 @@
 openapi: 3.0.1
 info:
   title: AUdit Trail
-  description: "This is a sample server Petstore server.  You can find out more about\
-    \     Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net,\
-    \ #swagger](http://swagger.io/irc/).      For this sample, you can use the api\
-    \ key `special-key` to test the authorization     filters."
+  description: >-
+    This is an Audit Event System Service.
+    The RUNNING INSTANCE IS RUNNING AT https://audit-trail3.herokuapp.com/AuditTrail/v1/
+    Below you can find the description of
+    each operation.
   termsOfService: http://swagger.io/terms/
   contact:
     email: apiteam@swagger.io
@@ -16,18 +17,20 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-- url: https://desabe.dgi.gub.uy:1080/DGILocationsRest/v2
+  - url: https://audit-trail3.herokuapp.com/AuditTrail/v1/
+    variables: {}
+    description: A server instance running on Heroku
 tags:
-- name: Event
-  description: An event on a System
-  externalDocs:
-    description: Find out more
-    url: http://swagger.io
+  - name: Event
+    description: An event on a System
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
 paths:
   /event:
     post:
       tags:
-      - Event
+        - Event
       summary: Adds a new event to the Audit Trail
       operationId: addEvent
       requestBody:
@@ -38,59 +41,61 @@ paths:
               $ref: '#/components/schemas/Event'
         required: true
       responses:
-        "202":
+        '202':
           description: Event added to the System
-        "400":
+        '400':
           description: Bad Rquest
           content: {}
       x-codegen-request-body-name: body
-      
   /event/findByType:
     get:
       tags:
-      - "event"
-      summary: "Finds Events by type"
-      description: "Returns a list of events filtered by query parameters"
-      operationId: "findEvents"
+        - event
+      summary: Finds Events by type
+      description: Returns a list of events filtered by query parameters
+      operationId: findEvents
       parameters:
-      - name: eventType
-        in: query
-        description: eventType to filter by
-        required: true
-        style: form
-        explode: true
-        schema:
-          type: string
-      - name: startDate
-        in: query
-        description: startDate in ISO8601 format to filter by
-        required: true
-        style: form
-        explode: true
-        schema:
-          type: string  
-      - name: endDate
-        in: query
-        description: endDate in ISO8601 format to filter by
-        required: true
-        style: form
-        explode: true
-        schema:
-          type: string  
+        - name: eventType
+          in: query
+          description: eventType to filter by
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+          example: SYSTEM-FAILURE
+        - name: startDate
+          in: query
+          description: startDate in ISO8601 format to filter by
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+          example: {}
+        - name: endDate
+          in: query
+          description: endDate in ISO8601 format to filter by
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+          example: {}
       responses:
-        "200":
-          description: "successful operation"
-        "400":
-          description: "Invalid request"
-        "404":
-          description: "Events not found"
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid request
+        '404':
+          description: Events not found
 components:
   schemas:
     Event:
       required:
-      - created-time
-      - event-type
-      - origin-system
+        - created-time
+        - event-type
+        - origin-system
       type: object
       properties:
         event-type:
@@ -99,37 +104,41 @@ components:
           example: CUSTOMER-CREATED
         system-event:
           type: boolean
-          description: "Indicates whether the Event was generated automatically by\
-            \ the system, or it was caused by a user action"
+          description: >-
+            Indicates whether the Event was generated automatically by\ \ the
+            system, or it was caused by a user action
         origin-system:
           type: string
-          description: "Indicates the System where the Event was originated from.\
-            \ It could also be an Id of the system from which the event originated\
-            \ from. If it was generated from a sensor, this field can be the sensor\
-            \ ID. e.g. C232E-1235-EF231-EF3247"
+          description: >-
+            Indicates the System where the Event was originated from.\ \ It
+            could also be an Id of the system from which the event originated\ \
+            from. If it was generated from a sensor, this field can be the
+            sensor\ \ ID. e.g. C232E-1235-EF231-EF3247
           example: Account-System
         created-time:
           type: string
           description: Indicates the time at which the Event was created
-          example: 2020-06-11T13:55:24Z
+          example: {}
         added-time:
           type: string
-          description: Indicates the time at which the Event was added to the Audit
-            Trail
-          example: 2020-06-11T13:55:24Z
+          description: Indicates the time at which the Event was added to the Audit Trail
+          example: {}
         success:
           type: boolean
           description: Indicates whether the Event was a success or a failure
         affected-resource:
           type: string
-          description: "Indicates the resource or component to which the event is\
-            \ associated. For example, when a user with Id 9098 is created. The affected-resource\
-            \ could be 9098. If it's a general event, for example a System Failure,\
-            \ it could indicate the id of the System, e.g. the CRM."
-          example: "9098"
+          description: >-
+            Indicates the resource or component to which the event is\ \
+            associated. For example, when a user with Id 9098 is created. The
+            affected-resource\ \ could be 9098. If it's a general event, for
+            example a System Failure,\ \ it could indicate the id of the System,
+            e.g. the CRM."
+          example: '9098'
         origin-IP:
           type: string
           description: Indicates the IP of the system from where the event was originated
+          example: 192.168.1.6
       xml:
         name: Pet
     ApiResponse:
@@ -142,4 +151,3 @@ components:
           type: string
         message:
           type: string
-
