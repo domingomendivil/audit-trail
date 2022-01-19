@@ -18,8 +18,8 @@ externalDocs:
 servers:
 - url: https://desabe.dgi.gub.uy:1080/DGILocationsRest/v2
 tags:
-- name: entrada
-  description: Everything about your Entradas
+- name: Event
+  description: An event on a System
   externalDocs:
     description: Find out more
     url: http://swagger.io
@@ -27,7 +27,7 @@ paths:
   /event:
     post:
       tags:
-      - entrada
+      - Event
       summary: Adds a new event to the Audit Trail
       operationId: addEvent
       requestBody:
@@ -39,27 +39,58 @@ paths:
         required: true
       responses:
         "202":
-          description: Event created
-        "405":
-          description: Invalid input
+          description: Event added to the System
+        "400":
+          description: Bad Rquest
           content: {}
-      security:
-      - petstore_auth:
-        - write:pets
-        - read:pets
       x-codegen-request-body-name: body
+      
+  /event/findByType:
+    get:
+      tags:
+      - "event"
+      summary: "Finds Events by type"
+      description: "Returns a list of events filtered by query parameters"
+      operationId: "findEvents"
+      parameters:
+      - name: eventType
+        in: query
+        description: eventType to filter by
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: startDate
+        in: query
+        description: startDate in ISO8601 format to filter by
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string  
+      - name: endDate
+        in: query
+        description: endDate in ISO8601 format to filter by
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string  
+      responses:
+        "200":
+          description: "successful operation"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Events not found"
 components:
   schemas:
     Event:
       required:
-      - added-time
-      - affected-resource
       - created-time
       - event-type
-      - origin-IP
       - origin-system
-      - success
-      - system-event
       type: object
       properties:
         event-type:
@@ -111,16 +142,4 @@ components:
           type: string
         message:
           type: string
-  securitySchemes:
-    petstore_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: http://petstore.swagger.io/oauth/dialog
-          scopes:
-            write:pets: modifica entradas
-            read:pets: lee entradas
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header
+

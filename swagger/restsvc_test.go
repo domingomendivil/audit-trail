@@ -9,7 +9,26 @@
  */
 package swagger
 
-import "testing"
+import (
+	model "mingo/audit/model"
+	"testing"
+)
+
+type AuditTrailMock struct {
+	mock.Mock
+}
+
+var mock AuditTrailMock
+
+func (m *AuditTrailMock) AddEvent(ev model.Event) error {
+	return m.Called(ev)
+}
+
+func (m *AuditTrailMock) GetEvents(query model.EventQuery) ([]model.Event, error) {
+	return m.Called(query)
+}
 
 func TestGetEvents(t *testing.T) {
+	restSvc := RestSvcImpl{&mock}
+	restSvc.FindByType(writer, request)
 }
